@@ -290,6 +290,19 @@
           </execution>
         </executions>
       </plugin>
+        <plugin>
+        <groupId>io.github.zju-aces-ise</groupId>
+        <artifactId>chatunitest-maven-plugin</artifactId>
+        <version>2.1.1</version>
+        <configuration>
+          <apiKeys>local</apiKeys>
+          <model>qwen2.5-coder:7b</model>
+          <url>http://localhost:11434/v1/chat/completions</url>
+          <testNumber>5</testNumber>
+          <maxRounds>5</maxRounds>
+          <thread>false</thread>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
   <reporting>
