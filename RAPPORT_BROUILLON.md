@@ -30,7 +30,7 @@ L'énoncé demande de sélectionner entre une et trois classes possédant déjà
 Nous avons utilisé JaCoCo avec la commande :
 `./mvnw -pl tika-core -am test jacoco:report`
 
-![Couverture initiale des classes sélectionnées](docs/images/jacocoCouvertureInitiale.png)
+![Couverture initiale des classes sélectionnées](docs/tache2/images/jacocoCouvertureInitiale.png)
 
 Pour l'ensemble du module tika-core, le rapport initial indiquait notamment une couverture de 46 % des instructions et de 48 % des branches.
 Nous avons ensuite examiné les différents packages et nous nous sommes intéressées au package :
