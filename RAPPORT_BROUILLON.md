@@ -40,12 +40,13 @@ Celui-ci présentait plusieurs classes avec une couverture inférieure à 100 %,
 Vérification de l'existence de tests
 Une couverture inférieure à 100 % n'était pas suffisante pour sélectionner une classe. Nous devions également nous assurer que les classes possédaient déjà des tests.
 Nous avons donc recherché les fichiers de test présents dans :
-`tika-core/src/test/java/org/apache/tika/utils`
+ `tika-core/src/test/java/org/apache/tika/utils`
 
 Les fichiers suivants ont notamment été trouvés :
--`CharsetUtilsTest.java`
+
+- `CharsetUtilsTest.java`
 - `ConcurrentUtilsTest.java`
--` RegexUtilsTest.java`
+- ` RegexUtilsTest.java`
 - `ServiceLoaderUtilsTest.java`
 - `XMLReaderUtilsTest.java`
 Nous avons ensuite croisé ces résultats avec ceux du rapport JaCoCo.
@@ -78,6 +79,8 @@ Nous avons donc préféré sélectionner plusieurs classes de taille raisonnable
 ### Classes retenues
 
 Les trois classes finalement retenues sont :
+
+
 1. **CharsetUtils**
 2. **ConcurrentUtils**
 3. **RegexUtils**
