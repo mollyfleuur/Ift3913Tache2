@@ -113,7 +113,7 @@ Les méthodes sont étudiées dans l'ordre suivant :
 2. `clean`
 3. `forName`
 
-#### Génération pour `isSupported`
+#### 1. Génération pour `isSupported`
 
 ChatUniTest a généré un test contenant notamment les trois vérifications suivantes :
 
@@ -169,7 +169,7 @@ Le résultat obtenu est:
 
 Le test généré pour `isSupported` nécessite donc une intervention manuelle avant de pouvoir être intégré au projet, mais les cas de test pertinents proposés par le modèle ont pu être conservés et exécutés avec succès après correction.
 
-#### Génération pour `clean`
+#### 2. Génération pour `clean`
 
 ChatUniTest a ensuite été exécuté sur la méthode `clean`. Plusieurs tests ont été générés, mais aucun n'a compilé directement. Les deux premières générations ont échoué pendant les cinq rounds de correction automatique. Lors de la troisième génération, les rounds 0 à 3 ont également échoué à la compilation et le round 4 s'est terminé par une `SocketTimeoutException`.
 
@@ -198,7 +198,7 @@ Après intégration dans  `CharsetUtilsChatUniTest.java` , les tests ont été e
 
 Ce résultat comprend le test précédent de `isSupported` et les trois tests générés pour `clean`.
 
-#### Génération pour `forName`
+#### 3. Génération pour `forName`
 
 ChatUniTest a généré des tests pour la méthode forName(String) en utilisant le modèle local CodeQwen via Ollama.
 
