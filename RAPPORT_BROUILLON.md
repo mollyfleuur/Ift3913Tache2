@@ -169,8 +169,6 @@ Le résultat obtenu est:
 
 Le test généré pour `isSupported` nécessite donc une intervention manuelle avant de pouvoir être intégré au projet, mais les cas de test pertinents proposés par le modèle ont pu être conservés et exécutés avec succès après correction.
 
-
-
 #### Génération pour `clean`
 
 ChatUniTest a ensuite été exécuté sur la méthode `clean`. Plusieurs tests ont été générés, mais aucun n'a compilé directement. Les deux premières générations ont échoué pendant les cinq rounds de correction automatique. Lors de la troisième génération, les rounds 0 à 3 ont également échoué à la compilation et le round 4 s'est terminé par une `SocketTimeoutException`.
@@ -200,10 +198,20 @@ Après intégration dans  `CharsetUtilsChatUniTest.java` , les tests ont été e
 
 Ce résultat comprend le test précédent de `isSupported` et les trois tests générés pour `clean`.
 
+#### Génération pour `forName`
 
+ChatUniTest a généré des tests pour la méthode forName(String) en utilisant le modèle local CodeQwen via Ollama.
 
+La génération automatique a rencontré plusieurs échecs de compilation et des erreurs de délai d'attente (SocketTimeoutException). Le test généré a été récupéré dans les fichiers temporaires de ChatUniTest.
 
+**Corrections manuelles:**
 
+1. Suppression des imports Mockito inutiles , responsables d'erreurs de compilation .
+2. Correction de l'oracle pour null : la méthode lève `IllegalArgumentException`.
+3. Correction de l'oracle pour cp850 : le nom canonique retourné est IBM850 et non cp850.
+
+Les sept cas générés ont été conservés dans une seule méthode JUnit , `testForName()` .
+**Validation** : après correction, les cinq méthodes de test de CharsetUtilsChatUniTest ont été exécutées avec Maven : `5 tests, 0 échec, 0 erreur BUILLD SUCCESS` .
 
 
 ### Oracles
