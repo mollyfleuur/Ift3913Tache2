@@ -97,7 +97,21 @@ ChatUniTest a été configuré dans le module `tika-core` afin de générer des 
 
 Avant la génération, la commande `parse` de ChatUniTest a été exécutée afin d'analyser le projet. L'analyse s'est terminée avec succès et a identifié 361 classes et 1617 méthodes.
 
-La génération des tests pour `CharsetUtils` a ensuite été lancée avec ChatUniTest. Afin d'observer plus précisément le comportement de l'outil, une première génération a été effectuée sur la méthode `isSupported`.
+#### Méthodes étudiées
+
+`CharsetUtils` expose trois méthodes publiques principales :
+
+- `isSupported(String charsetName)` : vérifie si un nom de charset est supporté ;
+- `clean(String charsetName)` : nettoie et normalise un nom de charset et retourne `null` lorsqu'il n'est pas valide ;
+- `forName(String name)` : recherche et retourne le `Charset` correspondant à un nom, en prenant notamment en charge certaines variantes ou erreurs courantes dans les noms de charset.
+
+La génération de tests avec ChatUniTest est effectuée séparément sur ces trois méthodes afin de pouvoir observer et documenter précisément les tests produits, leur capacité à compiler et s'exécuter sans intervention, ainsi que la qualité des oracles générés.
+
+Les méthodes sont étudiées dans l'ordre suivant :
+
+1. `isSupported`
+2. `clean`
+3. `forName`
 
 #### Génération pour `isSupported`
 
@@ -154,6 +168,41 @@ Le résultat obtenu est:
 `Tests run: 1, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS`
 
 Le test généré pour `isSupported` nécessite donc une intervention manuelle avant de pouvoir être intégré au projet, mais les cas de test pertinents proposés par le modèle ont pu être conservés et exécutés avec succès après correction.
+
+
+
+#### Génération pour `clean`
+
+ChatUniTest a ensuite été exécuté sur la méthode `clean`. Plusieurs tests ont été générés, mais aucun n'a compilé directement. Les deux premières générations ont échoué pendant les cinq rounds de correction automatique. Lors de la troisième génération, les rounds 0 à 3 ont également échoué à la compilation et le round 4 s'est terminé par une `SocketTimeoutException`.
+
+L'analyse du test généré au round 0 montre que ChatUniTest proposait trois cas :
+
+```java
+assertEquals("UTF-8", CharsetUtils.clean("UTF-8"));
+assertEquals(null, CharsetUtils.clean("invalid"));
+assertEquals(null, CharsetUtils.clean(null));
+```
+
+Ces trois oracles sont cohérents avec l'implémentation de `clean` : un charset valide est normalisé, tandis qu'une entrée invalide ou `null` conduit à une `IllegalArgumentException` interceptée par `clean` , qui retourne alors `null`.
+
+L'échec de compilation provenait des imports Mockito ajoutés automatiquement par ChatUniTest :
+
+```package org.mockito does not exist
+package org.mockito.junit.jupiter does not exist
+```
+Mockito n'est pas utilisé par les tests générés et n'est pas une dépendance de tika-core. Malgré plusieurs rounds de correction, ChatUniTest n'a pas supprimé ces imports automatiquement.
+
+**Correction manuelle effectuée** : suppression des imports Mockito inutiles. Les cas de test et leurs oracles ont été conservés sans modification logique.
+
+Après intégration dans  `CharsetUtilsChatUniTest.java` , les tests ont été exécutés avec Maven :
+
+`Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 BUILD SUCCESS`
+
+Ce résultat comprend le test précédent de `isSupported` et les trois tests générés pour `clean`.
+
+
+
+
 
 
 
