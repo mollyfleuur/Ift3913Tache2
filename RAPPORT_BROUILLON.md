@@ -87,7 +87,7 @@ Les trois classes finalement retenues sont :
 
 Ces trois classes possèdent donc toutes des tests existants sans atteindre une couverture complète, tout en présentant des niveaux de couverture et des caractéristiques suffisamment différents pour permettre de comparer les résultats de la génération automatique de tests et de l'analyse par mutation.
 
-## CharsetUtils — Molly
+## CharsetUtils — Molly  (Windows 11)
 
 ### ChatUniTest
 
@@ -223,7 +223,7 @@ Les sept cas générés ont été conservés dans une seule méthode JUnit , `te
 ### Tests manuels
 ...
 
-## ConcurrentUtils — Cyreanne
+## ConcurrentUtils — Cyreanne  (MacOS)
 
 ### ChatUniTest
 ...
@@ -237,7 +237,7 @@ Les sept cas générés ont été conservés dans une seule méthode JUnit , `te
 ### Tests manuels
 ...
 
-## RegexUtils — Cyreanne
+## RegexUtils — Cyreanne  (MacOS)
 
 ### ChatUniTest
 ...
