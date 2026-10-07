@@ -151,7 +151,7 @@ Le test corrigé à été exécuté avec Maven :
 `../mvnw.cmd "-Dtest=CharsetUtilsChatUniTest" test`
 
 Le résultat obtenu est:
-```Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+``` Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
 BUILD SUCCESS
 ```
 
