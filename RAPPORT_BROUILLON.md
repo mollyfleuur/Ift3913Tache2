@@ -151,9 +151,7 @@ Le test corrigé à été exécuté avec Maven :
 `../mvnw.cmd "-Dtest=CharsetUtilsChatUniTest" test`
 
 Le résultat obtenu est:
-``` Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
-BUILD SUCCESS
-```
+`Tests run: 1, Failures: 0, Errors: 0, Skipped: 0  BUILD SUCCESS`
 
 Le test généré pour `isSupported` nécessite donc une intervention manuelle avant de pouvoir être intégré au projet, mais les cas de test pertinents proposés par le modèle ont pu être conservés et exécutés avec succès après correction.
 
