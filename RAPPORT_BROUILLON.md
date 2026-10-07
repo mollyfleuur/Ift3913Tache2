@@ -90,7 +90,72 @@ Ces trois classes possèdent donc toutes des tests existants sans atteindre une 
 ## CharsetUtils — Molly
 
 ### ChatUniTest
-...
+
+#### Configuration
+
+ChatUniTest a été configuré dans le module `tika-core` afin de générer des tests à l'aide d'un modèle de langage exécuté localement avec Ollama. Le modèle utilisé est `codeqwen:v1.5-chat`.
+
+Avant la génération, la commande `parse` de ChatUniTest a été exécutée afin d'analyser le projet. L'analyse s'est terminée avec succès et a identifié 361 classes et 1617 méthodes.
+
+La génération des tests pour `CharsetUtils` a ensuite été lancée avec ChatUniTest. Afin d'observer plus précisément le comportement de l'outil, une première génération a été effectuée sur la méthode `isSupported`.
+
+#### Génération pour `isSupported`
+
+ChatUniTest a généré un test contenant notamment les trois vérifications suivantes :
+
+```java
+assertTrue(CharsetUtils.isSupported("UTF-8"));
+assertFalse(CharsetUtils.isSupported("invalid-charset"));
+assertFalse(CharsetUtils.isSupported(null));```
+
+Ces trois cas de test couvrent respectivement :
+
+- un nom de charset valide ( `UTF-8` ) ;
+- un nom de charset invalide
+- une valeur `null`
+
+Cependant, le test produit par ChatUniTest n'a pas pu être compilé et exécuté directement sans intervention manuelle.
+
+#### Problèmes rencontrés
+
+Le test généré contenait des imports Mockito , notamment :
+```java
+import org.mockito.*;
+import static org.mockito.Mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+```
+Mockito n'est pas une dépendance du module tika-core et ces imports n'étaient pas utilisés par le test. Ils provoquaient donc des erreurs de compilation.
+Le test généré contenait également du code utilisant la réflexion sur des éléments internes de CharsetUtils, notamment getCharsetICU. Cette partie reposait sur une interprétation incorrecte de l'implémentation de la classe et produisait notamment un oracle de la forme :
+
+`assertTrue((Boolean) getCharsetICU.invoke(null, "UTF-8"));`
+
+Cette vérification n'était pas valide et dépendait inutilement de détails internes de l'implémentation plutôt que du comportement public de `CharsetUtils`.
+ChatUniTest a tenté de corriger automatiquement le test au cours des rounds suivants. Cependant, plusieurs tentatives ont échoué avec une `SocketTimeoutException: Read timed out` . Un appel direct au modèle `codeqwen:v1.5-chat` avec Ollama répondait correctement, ce qui indique que le modèle local était fonctionnel malgré les délais d'attente rencontrés lors des tentatives de correction de ChatUniTest.
+
+#### Corrections manuelles 
+Deux catégories principales de corrections fonctionnelles ont été nécessaires pour rendre ce premier test exploitable :
+1. suppression des imports Mockito inutiles et indisponibles dans `tika-core` ;
+2. suppression des vérifications incorrectes basées sur la réflexion et sur `getCharsetICU`.
+Les trois assertions portant directement sur la méthode publique `CharsetUtils.isSupported` ont été conservées.
+
+Le test corrigé a été ajouté dans :
+
+`tika-core/src/test/java/org/apache/tika/utils/CharsetUtilsChatUniTest.java`
+
+Des adaptations de format ont également été nécessaires pour respecter les règles du projet Apache Tika (en-tête de licence Apache, fins de lignes LF et saut de ligne final). Ces adaptations sont considérées séparément des corrections fonctionnelles du test généré.
+
+#### Validation du test corrigé
+
+Le test corrigé à été exécuté avec Maven :
+`../mvnw.cmd "-Dtest=CharsetUtilsChatUniTest" test`
+
+Le résultat obtenu est:
+```Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+BUILD SUCCESS```
+
+Le test généré pour `isSupported` nécessite donc une intervention manuelle avant de pouvoir être intégré au projet, mais les cas de test pertinents proposés par le modèle ont pu être conservés et exécutés avec succès après correction.
+
+
 
 ### Oracles
 ...
