@@ -95,7 +95,7 @@ Ces trois classes possèdent donc toutes des tests existants sans atteindre une 
 
 ChatUniTest a été configuré dans le module `tika-core` afin de générer des tests à l'aide d'un modèle de langage exécuté localement avec Ollama. Le modèle utilisé est `codeqwen:v1.5-chat`.
 
-Avant la génération, la commande `parse` de ChatUniTest a été exécutée afin d'analyser le projet. L'analyse s'est terminée avec succès et a identifié 361 classes et 1617 méthodes.
+Avant la génération, la commande `parse` de ChatUniTest a été exécutée afin d'analyser le projet. L'analyse s'est terminée avec succès et a identifié **361 classes et 1617 méthodes**.
 
 #### Méthodes étudiées
 
@@ -215,7 +215,52 @@ Les sept cas générés ont été conservés dans une seule méthode JUnit , `te
 
 
 ### Oracles
-...
+Nous avons comparé les oracles générés par ChatUniTest avec ceux des tests originaux de `CharsetUtilsTest.java` , selon trois critères : **pertinence, précision et capacité à détecter des défauts** .
+
+#### 1. Pertinence des oracles 
+
+Les oracles générés sont globalement pertinents, puisqu'ils vérifient des comportements attendus des trois méthodes publiques de CharsetUtils.
+
+Cependant, plusieurs scénarios sont redondants avec les tests originaux :
+
+-  **isSupported()** : les vérifications de UTF-8, d'un charset inexistant et de null sont déjà représentées dans les tests existants.
+
+-  **clean()** : ChatUniTest vérifie principalement un charset valide, un charset invalide et null. Les tests originaux couvrent également les espaces, les guillemets, les alias et les formats inhabituels.
+
+-  **forName()** : ChatUniTest apporte des assertions directes sur cette méthode, qui était auparavant testée indirectement par les appels à `clean()` .
+
+isSupported() : les vérifications de UTF-8, d'un charset inexistant et de null sont déjà représentées dans les tests existants.
+
+clean() : ChatUniTest vérifie principalement un charset valide, un charset invalide et null. Les tests originaux couvrent également les espaces, les guillemets, les alias et les formats inhabituels.
+
+forName() : ChatUniTest apporte des assertions directes sur cette méthode, qui était auparavant testée indirectement par les appels à clean().
+
+Les oracles générés sont donc pertinents, mais apportent relativement peu de nouveaux scénarios.
+
+#### 2. Précision et validité des oracles 
+
+Les oracles originaux sont généralement plus précis : ils vérifient les résultats exacts de la normalisation, notamment la conversion d'alias en noms canoniques.
+
+ChatUniTest a toutefois généré deux oracles incorrects pour `forName()` :
+
+- **Entrée null** : l'IA attendait IllegalCharsetNameException, alors que la méthode lève IllegalArgumentException.
+
+- **Entrée "cp850"** : l'IA attendait "cp850", alors que Charset.name() retourne le nom canonique "IBM850".
+
+Ces deux erreurs montrent qu'un test généré peut sembler logique tout en reposant sur une mauvaise interprétation du comportement du programme.
+
+Les oracles ont donc dû être vérifiés à partir du code source et des résultats d'exécution avant leur intégration.
+
+#### 3. Capacité à détecter des défauts
+
+Les tests originaux possèdent des oracles plus diversifiés, notamment pour les règles de normalisation et les cas limites. Ils sont donc susceptibles de détecter davantage de défauts liés à ces comportements.
+
+Les tests générés se concentrent davantage sur les cas courants et reproduisent plusieurs assertions déjà existantes. Néanmoins, les assertions directes sur forName() pourraient permettre de détecter certains défauts supplémentaires.
+
+Cette contribution ne peut pas être confirmée par la simple réussite des tests : elle devra être évaluée à l'aide des scores de mutation obtenus avec PIT.
+
+**En conclusion** , ChatUniTest produit des oracles majoritairement pertinents, mais parfois redondants ou incorrects. Les tests originaux se distinguent par leur diversité et leur précision, particulièrement pour les cas limites et les règles de normalisation.
+
 
 ### PIT
 ...
