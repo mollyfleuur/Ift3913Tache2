@@ -263,7 +263,65 @@ Cette contribution ne peut pas être confirmée par la simple réussite des test
 
 
 ### PIT
-...
+
+#### 1. Objectif et configuration 
+Nous avons utilisé **PIT 1.19.1** pour évaluer la capacité des tests de CharsetUtils à détecter des défauts artificiellement introduits dans le code.
+
+Trois configurations ont été comparées : 
+
+- **Tests originaux** : `CharsetUtilsTest`
+- **Tests générés par ChatUniTest** : `CharsetUtilsChatUniTest`
+- **Tests combinés** : les deux classes réunies
+
+Les analyses ont été réalisées sur le module tika-core, avec le plugin Maven PIT et le support JUnit 5. Les trois exécutions ont généré les mêmes 25 mutants.
+
+#### 2. Comparaison des résultats 
+
+|**Indicateur**|**Tests originaux**|**ChatUniTest**|**Tests combinés**|
+|--------------|-------------------|---------------|------------------|
+|Couverture des lignes|78%|65%|78%|
+|Mutants générés|25|25|25|
+|Mutants tués|20|18|20|
+|Mutants non couverts|5|7|5|
+|Mutants survivants|0|0|0|
+|**Score de mutation**|80%|72%|80%|
+|Test Strength|100%|100%|100%|
+
+![Tests originaux — 80 %](docs/tache2/images/TestOriginaux.png)
+![Tests générés par ChatUniTest — 72 %](docs/tache2/images/TestChatUniTest.png)
+
+Les **tests originaux obtiennent de meilleurs résultats** que les tests générés, avec une couverture des lignes supérieure de 13 points et un score de mutation supérieur de 8 points.
+
+L'ajout des tests ChatUniTest aux tests originaux ne produit aucune amélioration : le score reste à **80 %** , avec les mêmes cinq mutants non couverts.
+
+Cela indique que les tests générés sont principalement redondants avec les tests existants. Les 18 mutants détectés par ChatUniTest sont également détectés par les tests originaux.
+
+#### 3. Analyse des différences 
+
+L'examen des rapports PIT révèle deux mutations détectées par les tests originaux, mais non couvertes par ChatUniTest.
+
+|**Ligne**|**Méthodes**|**Mutation**|**Théorie**|
+|---------|------------|------------|-----------|
+|112|isSupported()|Retour `false` remplacé par `true`|Les tests originaux vérifient davantage de noms d'encodage mal formés, déclenchant `IllegalCharsetNameException`.|
+|179|forName()|Valeur retournée remplacée par `null`|Les tests originaux couvrent les mécanismes de normalisation de noms tels que `win1251` et `iso-8851-1`.|
+
+Ces différences montrent que les tests originaux explorent davantage les **cas limites et les mécanismes de correction des entrées**, tandis que les tests générés privilégient des cas plus simples.
+
+### 4. Analyse des mutants non couverts
+Les tests combinés laissent cinq mutants non couverts :
+
+![Mutations non couvertes](docs/tache2/images/mutationNonCouverte.png)
+
+L'analyse du rapport PIT montre que **20 des 25 mutants ont été tués**, tandis que cinq restent non couverts (`NO_COVERAGE`), aux lignes **107, 108, 118, 186 et 187**.
+
+Quatre de ces mutants (107, 108, 186 et 187) concernent des branches liées à **ICU4J**, une bibliothèque facultative de gestion des encodages. Ces branches ne sont pas exercées par les tests actuels, possiblement parce que les fonctionnalités ICU4J ne sont pas activées dans l'environnement de test.
+
+Le cinquième mutant (ligne 118) concerne la gestion d'une exception inattendue dans `isSupported()`, un scénario qui n'est pas déclenché par les entrées testées.
+
+**Aucun mutant couvert n'a survécu** (*Test Strength* de 100 %). Les limites observées concernent donc principalement des chemins d'exécution non couverts, plutôt que des assertions insuffisantes.
+
+Ces cinq mutants constituent les cibles de la prochaine étape : la conception de tests manuels visant à améliorer la couverture et le score de mutation.
+
 
 ### Tests manuels
 ...
