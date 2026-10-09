@@ -119,6 +119,13 @@
       <artifactId>junit-jupiter-engine</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -303,7 +310,38 @@
           <thread>false</thread>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.25.9</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.2.2</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <targetClasses>
+            <param>org.apache.tika.utils.ConcurrentUtils</param>
+            <param>org.apache.tika.utils.RegexUtils</param>
+          </targetClasses>
+          <targetTests>
+            <param>org.apache.tika.utils.ConcurrentUtils*Test</param>
+            <param>org.apache.tika.utils.RegexUtils*Test</param>
+          </targetTests>
+
+          <mutators>
+            <mutator>STRONGER</mutator>
+          </mutators>
+
+          <timestampedReports>false</timestampedReports>
+        </configuration>
+      </plugin>
+
     </plugins>
+
   </build>
   <reporting>
     <plugins>
