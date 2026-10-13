@@ -322,9 +322,19 @@ Le cinquième mutant (ligne 118) concerne la gestion d'une exception inattendue 
 
 Ces cinq mutants constituent les cibles de la prochaine étape : la conception de tests manuels visant à améliorer la couverture et le score de mutation.
 
+### Tests manuels et résultats finaux
 
-### Tests manuels
-...
+Après l'analyse des mutants non couverts, nous avons développé des tests manuels ciblant les branches non exécutées de `CharsetUtils`.
+
+Un premier test provoque une exception lors de l'invocation réflexive dans `isSupported()` et vérifie que la méthode retourne `false`. Les autres tests simulent un fournisseur ICU4J pour vérifier la reconnaissance d'un encodage et la récupération d'un objet `Charset` par `forName()`.
+
+Ces tests utilisent la réflexion Java pour simuler les comportements attendus des méthodes ICU4J, dont la classe recherchée n'était pas disponible dans notre environnement. Les oracles vérifient les valeurs retournées par les méthodes testées.
+
+**Résultat :** les cinq mutants initialement non couverts (lignes 107, 108, 118, 186 et 187) ont été tués. Le score de mutation est passé de **80 % (20/25) à 100 % (25/25)** et la couverture des lignes de **78 % à 85 %**.
+
+Ces résultats montrent que les tests manuels ont complété les tests existants et générés en ciblant précisément les chemins d'exécution non couverts.
+
+![Mutations finales](docs/tache2/images/mutationFinales.png)
 
 ## ConcurrentUtils — Cyreanne  (MacOS)
 
