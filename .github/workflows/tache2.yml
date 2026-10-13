@@ -23,9 +23,8 @@ jobs:
       - name: Installer les modules dont depend tika-core
         run: mvn -B -ntp -pl tika-annotation-processor -am install -DskipTests
 
-      - name: Lancer les tests de ConcurrentUtils et RegexUtils
-        run: mvn -B -ntp -pl tika-core test -Dtest='ConcurrentUtils*Test,RegexUtils*Test'
-
+      - name: Lancer les tests des trois classes
+        run: mvn -B -ntp -pl tika-core test -Dtest='CharsetUtils*Test,ConcurrentUtils*Test,RegexUtils*Test'
       - name: Lancer PIT
         run: mvn -B -ntp -pl tika-core test-compile org.pitest:pitest-maven:mutationCoverage
 
