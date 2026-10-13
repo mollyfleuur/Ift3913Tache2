@@ -327,32 +327,163 @@ Ces cinq mutants constituent les cibles de la prochaine étape : la conception d
 ...
 
 ## ConcurrentUtils — Cyreanne  (MacOS)
+Environnement : MacOS, Java 21, Maven 3.9.9, Ollama avec `codeqwen:v1.5-chat`, PIT 1.25.9
+
+### Pourquoi cette classe
+
+![Tableau JaCoCo initial](docs/tache2/images/JacocoAvant.png)
+
+`ConcurrentUtils.execute(ParseContext, Runnable)` a deux chemins : si aucun `ExecutorService` n'est présent dans le `ParseContext`, la tâche est lancée dans un nouveau thread, sinon elle est soumise à l'exécuteur (`executorService.submit(runnable)`)
+
+La classe possède déjà 2 tests mais le 2ème chemin n'est jamais exécuté. Le test `testExecuteExecutor` est censé tester le deuxième chemin mais il enregistre l'exécuteur sous la clé `SimpleThreadPoolExecutor.class`. La Couverture initiale JaCoCo, indiquait 80 % des instructions et 50 % des branches couvertes
 
 ### ChatUniTest
-...
+
+#### Commande 
+mvn -pl tika-core test-compile chatunitest:class -DselectClass=ConcurrentUtils
+
+#### Configuration
+J'ai lancé ChatUniTest avec la configuration faite par mon binôme (5 tests demandés et jusqu'à 5 tentatives par test). Durée de génération : environ 27 minutes et aucun n'a compilé (un total de 25 tests).
+
+Messages d'erreurs : `package org.mockito does not exist` et `package org.mockito.junit.jupiter does not exist`
+
+#### Problèmes rencontrés
+ChatUniTest ajoute automatiquement des imports Mockito à chaque test généré, alors que Mockito n'était pas une dépendance de tika-core. Sur les 50 tentatives réalisées pour ConcurrentUtils et RegexUtils, 49 ont échoué uniquement à cause de Mockito
+
+![Resultat ChatUniTest 1](docs/tache2/images/chatUniTestConcurrent1.png)
+
+Pour regler le problème j'ai ajouté Mockito comme dépendance de test dans le pom.xml de tika-core (mockito-core et mockito-junit-jupiter). et après cet ajout le test `ConcurrentUtils_execute_0_2_Test` a compilé correctement mais ses 2 tests échouaient.
+
+Test brut : `tika-core/chatunitest-tests/org/apache/tika/utils/ConcurrentUtils_execute_0_2_Test.java`
+
+![Resultat ChatUniTest 2](docs/tache2/images/chatUniTestConcurrent2.png)
+
+#### Corrections manuelles
+1. Le résultat était comparé à un mock `FutureTask` jamais utilisé par `execute()` : remplacé par une vérification du type renvoyé.
+2. L'IA vérifiait que le thread du test s'appelle "Tika Thread" : remplacé par une vérification que la tâche se termine et que le `Runnable` est exécuté.
+3. Le mock `ExecutorService` n'était pas programmé (`submit()` renvoyait `null`) : ajout du `Future` à renvoyer.
+
+S'y ajoutent l'en-tête de licence et le nettoyage des imports. Après correction : `Tests run: 2, Failures: 0 BUILD SUCCESS`
 
 ### Oracles
-...
+Les oracles des tests originaux sont faibles. Ils vérifient seulement que la tâche se termine. C'est pour cette raison que le test original passe sans passer l'exécuteur.
+
+ChatUniTest  quant à lui, vérifie quel objet est renvoyé par `execute()` et cela permet de distinguer réellement les deux chemins.
+
+Une fois les petites erreurs corrigées, l'oracle du second test `(assertEquals(future, result))` est précis et échoue dès que la tâche n'est pas confiée à l'exécuteur.
+
+ChatUniTest a proposé ici une idée d'oracle meilleure que celle des tests originaux, mais son exécutiom contenait des erreurs qui ont dû être corrigées à partir du code source.
 
 ### PIT
-...
+
+![PIT de la classe Concurrent Avant](docs/tache2/images/pitConcurrentAvant.png)
+
+PIT a été ajouté au pom.xml de tika-core (plugin pitest-maven 1.25.9 avec le support JUnit 5). prenant en compte uniquement les classes ConcurrentUtils et RegexUtils et leurs classes de test :
+`mvn -pl tika-core test-compile org.pitest:pitest-maven:mutationCoverage`
+
+Avec les mutateurs par défaut, les tests originaux tuaient 7 mutants sur 7 pour les classes ConcurrentUtils et RegexUtils, alors que la ligne 50 de ConcurrentUtils n'était jamais exécutée. Les mutateurs par défaut produisent en effet surtout des mutants qui font planter le programme, et donc faciles à détecter. Le groupe de mutateurs STRONGER alors a été utilisé et ajoute des mutants forçant une condition à toujours prendre le même chemin.
+
+Trois configurations :
+`Tests originaux : ConcurrentUtilsTest`
+`Tests originaux + ChatUniTest : avec ConcurrentUtils_execute_0_2_Test`
+`Tous les tests : avec, en plus, ConcurrentUtilsManualTest`
+
+|**Indicateur**|**Tests originaux**|**+ ChatUniTest**|**+ Tests manuels**|
+|--------------|-------------------|-----------------|-------------------|
+|Couverture des lignes|82 % (9/11)|91 % (10/11)|91 % (10/11)|
+|Mutants générés|4|4|4|
+|Mutants tués|3|4|4|
+|Mutants survivants|1|0|0|
+|**Score de mutation**|75 %|100 %|100 %|
+
+
+#### Analyse des mutants
+|**Ligne**|**Mutation**|**Avant**|**Après**|**Explication**|
+|---------|------------|---------|---------|---------------|
+|44|Toujours utiliser l'exécuteur|Tué|Tué|`submit()` est appelé sur `null` : `NullPointerException`.|
+|44|Toujours créer un thread|**Survivant**|**Tué**|Le test ChatUniTest corrigé attend le `Future` de l'exécuteur et reçoit un autre objet.|
+|47|`thread.start()` supprimé|Tué (délai)|Tué (délai)|La tâche ne démarre jamais et `result.get()` attend indéfiniment.|
+|53|Valeur retournée remplacée par `null`|Tué|Tué|`result.get()` sur `null` provoque une erreur.|
+
+![PIT de la classe Concurrent Apres](docs/tache2/images/pitConcurrentApres.png)
 
 ### Tests manuels
-...
+Fichier : ConcurrentUtilsManualTest.java. 
+Deux tests sans mock : la tâche enregistre le nom de son thread, qui sert d'oracle.
+
+`testExecuteWithNullExecutorService` sans exécuteur et la tâche tourne dans un thread créé par execute(). Il contient un ParseContext vide. Oracle : le thread s'appelle "Tika Thread" c'est un nom donné par execute().
+
+`testExecuteWithNonNullExecutorService` avec un exécuteur et la tâche lui est réellement confiée. Il contient un vrai `SimpleThreadPoolExecutor`qui est enregistré sous la bonne clé `ExecutorService.class`. Oracle : le thread s'appelle "Tika Executor Thread" et c'est le nom donné par cet exécuteur. Ce test tue le mutant « toujours créer un thread ».
+
+Validation : Tests run: 2, Failures: 0. BUILD SUCCESS
 
 ## RegexUtils — Cyreanne  (MacOS)
+Test brut : `tika-core/chatunitest-tests/org/apache/tika/utils/RegexUtils_extractLinks_0_0_Test.java`
+
+### Pourquoi cette classe
+`RegexUtils.extractLinks(String)` renvoie les URL trouvées dans un texte grâce à une expression régulière.
+La seule ligne non couverte de la classe est son constructeur implicite selon Jacoco, ce qui veut dire 100 % des branches couvertes. Cette couverture est cependant trompeuse, les tests originaux ne vérifient l'expression régulière qu'avec des URL simples, et ni JaCoCo ni PIT ne peuvent évaluer une expression régulière. De plus, un mutant survit avec STRONGER.
 
 ### ChatUniTest
-...
+
+![Resultat ChatUniTest de regex avant](docs/tache2/images/chatUniTest-Regex1.png)
+
+`mvn -pl tika-core test-compile chatunitest:class -DselectClass=RegexUtils`
+
+Comme avec ConcurrentUtils, la première génération donne un resultat de 25 tentatives avec aucune ayant compilée (même cause c'est le Mockito aussi). Après l'ajout de Mockito : `RegexUtils_extractLinks_0_0_Test` compile et réussit dès le debut.
+
+![Resultat ChatUnitest de Regex apres](docs/tache2/images/chatUniTest-Regex2.png)
+
+Il n'y a pas eu de correction manuelle à faire de ce côté, juste l'ajout de l'en-tête de Licence ainsi que quelques imports.
 
 ### Oracles
-...
+2 oracles sur 3 sont redondants (null, chaîne vide) avec les tests originaux. Il n'y a que le schéma https qui est nouveau.
+Les oracles sont précis et ont permis de faire la comparaison de la liste complète (contenu, nombre et ordre).
+L'IA s'attarde quand même uniquement sur les évidents et n'explore pas l'expression régulière (fragments, encodage et ponctuation).
 
 ### PIT
-...
+|**Indicateur**|**Tests originaux**|**+ ChatUniTest**|**+ Tests manuels**|
+|--------------|-------------------|-----------------|-------------------|
+|Couverture des lignes|90 % (9/10)|90 % (9/10)|90 % (9/10)|
+|Mutants générés|7|7|7|
+|Mutants tués|6|6|6|
+|Mutants survivants|1|1|1|
+|**Score de mutation**|86 %|86 %|86 %|
+
+Les 6 mutants tués le sont dès les tests originaux (liste toujours vide, boucle jamais exécutée, NullPointerException sur null, etc.).
+Cependant, il y a un mutant survivant et il supprime la vérification `content.isEmpty()`. Sans ça une chaîne vide passe dans l'expression régulière, qui ne trouve rien, et la méthode renvoie quand même une liste vide. Ce mutant est équivalent, ce qui veut dire que le comportement est identique, donc aucun test ne peut le tuer. : 86 % est le maximum que l'on peut atteindre.
+
+![Resultat PIT regex](docs/tache2/images/PitRegex.png)
 
 ### Tests manuels
-...
+Fichier : `RegexUtilsManualTest.java`. Ces tests visent l'expression régulière, que PIT ne peut pas évaluer.
+
+|**Test**|**Données**|**Oracle**|
+|--------|-----------|----------|
+|`testExtractLinksGardeRequeteEncodageEtFragment`|`https://tika.apache.org/docs/a%20b?x=1&y=2#section-3`|URL entière : `?`, `&`, `%20` et `#` sont acceptés.|
+|`testExtractLinksArreteUrlSurUnEncodageInvalide`|`http://exemple.com/%zz`|`http://exemple.com/` : `%` doit être suivi de 2 chiffres hexadécimaux.|
+|`testExtractLinksMajusculesEtPlusieursLignes`|`HTTP://A.EXEMPLE.COM` et une URL `ftp` sur 2 lignes|Les 2 URL, séparées, dans l'ordre.|
+|`testExtractLinksGardeLePointFinal`|« Voir http://exemple.com. »|`http://exemple.com.` **avec le point** : limite de Tika.|
+|`testExtractLinksAccepteToutSchema`|`mailto:...` et « Attention:danger »|Les 2 sont extraits : faux positif.|
+
+Les deux derniers révèlent des défauts qu'aucun outil (JaCoCo, PIT, ChatUniTest) n'avait détectés. Validation : `Tests run: 5, Failures: 0  BUILD SUCCESS`.
 
 ## Comparaison et conclusion
+
+### ConcurrentUtils et RegexUtils
+|**Classe**|**Tests ChatUniTest utilisables sans correction**|**Corrections fonctionnelles**|**Score de mutation avant**|**Score de mutation après**|
+|----------|------------------------------------------------|------------------------------|---------------------------|---------------------------|
+|ConcurrentUtils|Non|3|75 %|100 %|
+|RegexUtils|Oui, après ajout de Mockito|0|86 %|86 %|
+
+Pour ces deux classes, ChatUniTest n'a produit aucun test compilable lors de la première génération, à cause des imports Mockito ajoutés automatiquement. Après l'ajout de Mockito comme dépendance de test, les deux tests générés ont compilé dès le premier essai.
+
+Pour ConcurrentUtils, l'IA a proposé une meilleure idée d'oracle que les tests originaux, mais trois corrections ont été nécessaires. Une fois corrigé, son test a permis de tester le chemin de l'exécuteur, jamais exécuté auparavant, et de faire passer le score de mutation de 75 % à 100 %.
+
+Pour RegexUtils, les tests générés étaient corrects mais redondants avec les tests originaux, et n'ont tué aucun mutant supplémentaire. Le seul mutant restant est équivalent : 86 % est le maximum atteignable.
+RegexUtils montre aussi les limites des métriques : la classe était couverte à 100 % des branches, mais nos tests manuels ont révélé des défauts de l'expression régulière qu'aucun outil n'avait détectés.
+
+En conclusion, ChatUniTest est un point de départ utile, mais ses tests doivent être vérifiés, corrigés et complétés par des tests conçus manuellement.
+
+### CharsetUtils
 ...
