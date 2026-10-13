@@ -327,6 +327,10 @@ Ces cinq mutants constituent les cibles de la prochaine étape : la conception d
 ...
 
 ## ConcurrentUtils — Cyreanne  (MacOS)
+
+### Usage IA
+En plus de ChatUniTest et de CodeQwen exigés par l'énoncé, j'ai utilisé l'assistant Claude Anthropic, comme aide ponctuelle sur les parties avec lesquelles j'ai eu des difficultés : erreurs de Maven et de configuration, échec de compilation des tests générés, interprétation de PIT etc...
+
 Environnement : MacOS, Java 21, Maven 3.9.9, Ollama avec `codeqwen:v1.5-chat`, PIT 1.25.9
 
 ### Pourquoi cette classe
@@ -487,3 +491,9 @@ En conclusion, ChatUniTest est un point de départ utile, mais ses tests doivent
 
 ### CharsetUtils
 ...
+
+## Exécution dans la GitHub Action
+
+Le fichier `.github/workflows/tache2.yml` lance, à chaque push, les 17 tests de ConcurrentUtils et RegexUtils, puis PIT. L'exécution réussit.
+
+![GitHub Action : toutes les étapes réussies](docs/tache2/images/GitHubActionCyreanne.png)
