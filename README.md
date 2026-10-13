@@ -1,4 +1,4 @@
-# Brouillon — Rapport Tâche 2
+# Rapport Tâche 2
 
 ## Informations générales
 
