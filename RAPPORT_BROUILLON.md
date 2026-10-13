@@ -89,6 +89,9 @@ Ces trois classes possèdent donc toutes des tests existants sans atteindre une 
 
 ## CharsetUtils — Molly  (Windows 11)
 
+### Usage IA
+En plus de ChatUniTest et de CodeQwen exigés par l'énoncé, j'ai été supportée par des outils d'intelligence artificielle , pour m'aider à comprendre les oracles de test, l’analyse des mutants avec PIT et les résultats de couverture. L’IA m’a également aidée à résoudre des problèmes techniques, à concevoir des tests manuels ciblés et à reformuler certaines parties du rapport. Les tests proposés ont été exécutés et vérifiés avec JUnit et PIT.
+
 ### ChatUniTest
 
 #### Configuration
@@ -500,7 +503,20 @@ RegexUtils montre aussi les limites des métriques : la classe était couverte �
 En conclusion, ChatUniTest est un point de départ utile, mais ses tests doivent être vérifiés, corrigés et complétés par des tests conçus manuellement.
 
 ### CharsetUtils
-...
+
+Pour CharsetUtils, les tests générés par ChatUniTest n'étaient pas directement utilisables. Plusieurs corrections ont été nécessaires, notamment la suppression d'imports Mockito inutilisables, la correction d'appels par réflexion et l'ajustement d'oracles incorrects concernant les noms d'encodages et les exceptions attendues.
+
+Les tests générés ont obtenu un score de mutation de **72 %**, contre **80 % pour les tests originaux**. Leur combinaison n'a apporté aucune amélioration : les 20 mutants tués par les tests combinés étaient déjà détectés par les tests originaux. Cela montre que les tests générés étaient principalement redondants et n'exerçaient pas de nouveaux chemins d'exécution.
+
+L'analyse PIT a permis d'identifier cinq mutants non couverts, principalement associés aux fonctionnalités facultatives ICU4J et à la gestion des exceptions. Nous avons alors conçu des tests manuels ciblés, utilisant la réflexion Java pour simuler les comportements du fournisseur ICU4J et provoquer une exception inattendue. Ces tests ont permis de tuer les cinq mutants restants.
+
+Le **score de mutation est ainsi passé de 80 % à 100 % (25/25 mutants tués)**, tandis que la couverture des lignes est passée de **78 % à 85 %**. Ces résultats illustrent l'intérêt de l'analyse de mutation pour orienter la conception de tests manuels vers des scénarios précis que les tests générés n'avaient pas explorés.
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+En conclusion, l'expérience sur les trois classes montre que l'efficacité de ChatUniTest varie selon le code testé. La génération automatique peut proposer des scénarios intéressants, mais elle ne garantit ni la validité des oracles ni une amélioration de la couverture des mutations. **La vérification humaine, l'analyse PIT et la conception de tests manuels ciblés restent essentielles pour améliorer la qualité des tests.**
+
 
 ## Exécution dans la GitHub Action
 
