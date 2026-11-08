@@ -1,0 +1,32 @@
+
+name: Tache 3 - Analyse Semgrep
+
+on:
+  push:
+    branches:
+      - tache3
+      - tache3-molly
+      - tache3-cyreanne
+  pull_request:
+    branches:
+      - tache3
+  workflow_dispatch:
+
+jobs:
+  semgrep:
+    name: Analyse de securite
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Semgrep
+        run: python3 -m pip install semgrep
+
+      - name: Analyser tika-core avec Semgrep
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --error \
+            tika-core
