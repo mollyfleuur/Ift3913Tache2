@@ -1,14 +1,17 @@
 
 package org.apache.tika;
 
-import java.util.Random;
+import java.io.IOException;
+import java.net.Socket;
 
 public class SemgrepValidation {
 
-    // TEST TEMPORAIRE : génération d'un jeton de sécurité
-    // avec un générateur pseudo-aléatoire non cryptographique.
-    public static String generateSecurityToken() {
-        Random random = new Random();
-        return Long.toHexString(random.nextLong());
+    // TEST TEMPORAIRE : connexion réseau non chiffrée
+    public static void testInsecureConnection()
+            throws IOException {
+
+        try (Socket socket = new Socket("localhost", 8080)) {
+            System.out.println(socket.isConnected());
+        }
     }
 }
