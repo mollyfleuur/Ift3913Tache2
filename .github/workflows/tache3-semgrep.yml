@@ -24,16 +24,80 @@ jobs:
       - name: Installer Semgrep
         run: python3 -m pip install semgrep
 
-      - name: Analyser tika-core avec Semgrep
+      - name: Analyser le code actuel
         run: |
           semgrep scan \
             --config p/security-audit \
             --json \
-            --output semgrep-report.json \
+            --output semgrep-current.json \
             tika-core
-            
-      - name: Sauvegarder le rapport Semgrep
+
+      - name: Recuperer la version de reference
+        uses: actions/checkout@v4
+        with:
+          ref: e1d07da7d688f0329baf1ede703b09e8b79b1354
+          path: baseline
+
+      - name: Analyser la version de reference
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --json \
+            --output semgrep-baseline.json \
+            baseline/tika-core
+
+      - name: Comparer les rapports
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import sys
+
+          def load_findings(filename):
+              with open(filename, encoding="utf-8") as f:
+                  report = json.load(f)
+
+              findings = set()
+              for result in report.get("results", []):
+                  rule = result.get("check_id", "")
+                  path = result.get("path", "")
+                  path = path.replace("baseline/", "", 1)
+                  fingerprint = result.get("extra", {}).get(
+                      "fingerprint", ""
+                  )
+                  line = result.get("start", {}).get("line", 0)
+
+                  identity = (
+                      rule,
+                      path,
+                      fingerprint if fingerprint else str(line)
+                  )
+                  findings.add(identity)
+
+              return findings
+
+          baseline = load_findings("semgrep-baseline.json")
+          current = load_findings("semgrep-current.json")
+          new_findings = current - baseline
+
+          print(f"Alertes initiales : {len(baseline)}")
+          print(f"Alertes actuelles : {len(current)}")
+          print(f"Nouvelles alertes : {len(new_findings)}")
+
+          if new_findings:
+              for finding in sorted(new_findings):
+                  print("NOUVELLE ALERTE :", finding)
+              sys.exit(1)
+
+          print("Aucune nouvelle alerte detectee.")
+          PY
+
+      - name: Sauvegarder les rapports
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-            name: semgrep-rapport-initial
-            path: semgrep-report.json
+          name: semgrep-comparaison
+          path: |
+            semgrep-current.json
+            semgrep-baseline.json
+          if-no-files-found: warn
