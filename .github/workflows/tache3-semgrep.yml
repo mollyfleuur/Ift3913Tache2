@@ -28,7 +28,7 @@ jobs:
         run: |
           semgrep scan \
             --config p/security-audit \
-            --config p/java \java
+            --config p/java \
             --json \
             --output semgrep-current.json \
             tika-core
@@ -43,6 +43,7 @@ jobs:
         run: |
           semgrep scan \
             --config p/security-audit \
+            --config p/java \
             --json \
             --output semgrep-baseline.json \
             baseline/tika-core
