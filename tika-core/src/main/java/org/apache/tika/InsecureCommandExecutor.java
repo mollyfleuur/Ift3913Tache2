@@ -5,13 +5,15 @@ import java.io.IOException;
 
 public class InsecureCommandExecutor {
 
-    // VULNERABILITE 2 : commande construite
-    // a partir d'une entree non fiable
+    // VULNERABILITE 2 : injection de commande
+    // Une entree utilisateur non fiable est executee par le shell.
     public static Process execute(String userInput)
             throws IOException {
 
-        String command = "sh -c " + userInput;
-
-        return Runtime.getRuntime().exec(command);
+        return new ProcessBuilder(
+                "sh",
+                "-c",
+                "echo " + userInput
+        ).start();
     }
 }
