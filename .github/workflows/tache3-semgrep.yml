@@ -28,6 +28,7 @@ jobs:
         run: |
           semgrep scan \
             --config p/security-audit \
+            --config p/java \java
             --json \
             --output semgrep-current.json \
             tika-core
