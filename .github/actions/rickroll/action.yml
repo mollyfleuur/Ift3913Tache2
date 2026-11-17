@@ -1,13 +1,14 @@
 
-name: Rickroll
-description: Affiche un rickroll lorsqu'un test echoue
+name: Meowroll
+description: Emergency purrtocol for CATastrophic test failures
 
 runs:
   using: composite
   steps:
-    - name: Never Gonna Give You Up
+    - name: MEOWROLL.EXE
       shell: bash
       run: |
-        echo "Never gonna give you up!"
-        echo "Never gonna let you down!"
-        echo "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+        echo "https://youtu.be/hvL1339luv0"
+        echo ""
+        echo "😼 You've been MEOWROLLED!"
+        echo "No rollback. Only meowback."
