@@ -25,8 +25,9 @@ jobs:
 
       - name: Lancer les tests des trois classes
         id: unit_tests
-        run: mvn -B -ntp -pl tika-core test -Dtest='CharsetUtils*Test,ConcurrentUtils*Test,RegexUtils*Test' 
-            
+        run: |
+            mvn -B -ntp -pl tika-core test -Dtest='CharsetUtils*Test,ConcurrentUtils*Test,RegexUtils*Test' 
+            exit 1
 
       - name: Rickroll si les tests echouent
         if: ${{ failure() && steps.unit_tests.outcome == 'failure' }}
