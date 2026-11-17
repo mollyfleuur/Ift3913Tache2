@@ -20,7 +20,7 @@ Ensuite, on a ajouté temporairement un socket non chiffré pour voir si GitHub 
 ### 1. Socket non chiffré — `InsecureNetworkClient.java`
 
 <!-- CAPTURE GITHUB ACTIONS — VULNÉRABILITÉ 1 : remplacer le chemin ci-dessous par celui de votre capture dans le dépôt. -->
-![Détection Semgrep du socket non chiffré](captures/semgrep-socket.png)
+![Détection Semgrep du socket non chiffré](docs/tache3/photos/Vul1.png)
 
 Pour notre première vulnérabilité, on a créé une classe dans `tika-core` qui ouvre une connexion avec `new Socket(host, port)`.
 On a choisi cet exemple parce qu'on avait remarqué que Semgrep signalait déjà ce type de problème dans `NetworkParser.java`. On savait donc qu'on pouvait le reproduire et vérifier sa détection.
@@ -31,7 +31,7 @@ Le problème est que la connexion n'utilise pas TLS, donc les données échangé
 ### 2. Injection SQL — `InsecureSQLQuery.java`
 
 <!-- CAPTURE GITHUB ACTIONS — VULNÉRABILITÉ 2 : remplacer le chemin ci-dessous par celui de votre capture dans le dépôt. -->
-![Détection Semgrep de l'injection SQL](captures/semgrep-injection-sql.png)
+![Détection Semgrep de l'injection SQL](docs/tache3/photos/Vul2.png)
 
 Pour celle-ci, on a un peu plus galéré.
 Au départ, on avait essayé de créer une injection de commande avec `ProcessBuilder`. Le code était vulnérable, mais Semgrep ne signalait rien avec nos règles. On a même essayé d'ajouter `p/java`, sans obtenir la détection qu'on cherchait.
