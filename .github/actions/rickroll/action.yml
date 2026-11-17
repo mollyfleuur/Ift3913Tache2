@@ -1,0 +1,14 @@
+
+name: Meowroll
+description: Emergency purrtocol for CATastrophic test failures
+
+runs:
+  using: composite
+  steps:
+    - name: MEOWROLL.EXE
+      shell: bash
+      run: |
+        echo "https://youtu.be/hvL1339luv0"
+        echo ""
+        echo "😼 You've been MEOWROLLED!"
+        echo "No rollback. Only meowback."
