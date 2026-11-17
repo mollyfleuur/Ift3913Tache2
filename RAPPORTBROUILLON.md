@@ -40,11 +40,45 @@ On a créé une méthode qui construit une requête SQL en ajoutant directement 
 
 **Résultat :** cette fois, Semgrep a détecté la vulnérabilité avec la règle `formatted-sql-string`.
 
-### 3.
-### 4.
-### 5.
-### 6.
-### 7.
+### 3. Désérialisation non sûre — `InsecureObjectLoader.java`
+
+![Détection Semgrep de la désérialisation non sûre](docs/tache3/photos/Vul3.png)
+
+On a placé cette classe dans le package `org.apache.tika.io` de `tika-core`, parce que c'est là que Tika gère la lecture des flux de données. C'est donc un endroit crédible pour une méthode qui charge des objets depuis un flux. La méthode crée un `ObjectInputStream` sur un flux qui peut venir de l'extérieur et appelle directement `readObject()`, sans aucun filtre sur les classes acceptées (CWE-502). Un attaquant pourrait donc envoyer un objet sérialisé malveillant qui exécute du code au moment de la désérialisation.
+
+**Résultat :** Semgrep a détecté la vulnérabilité avec la règle `object-deserialization`, sur la ligne qui crée l'`ObjectInputStream`.
+
+### 4. Hachage faible — `InsecureChecksum.java`
+
+![Détection Semgrep du hachage MD5](docs/tache3/photos/Vul4.png)
+
+Cette classe est dans `org.apache.tika.utils`, avec les autres utilitaires de Tika. Elle calcule une empreinte avec l'algorithme MD5 (CWE-328). MD5 n'est plus considéré comme sûr : on peut fabriquer deux contenus différents qui donnent la même empreinte. Si cette empreinte servait à vérifier l'intégrité d'un document, un attaquant pourrait donc le remplacer sans que ça se voie. On a choisi MD5 plutôt que SHA-1, qui était déjà signalé dans Tika avant nos modifications, pour que la nouvelle alerte soit bien distincte.
+
+**Résultat :** Semgrep a détecté la vulnérabilité avec la règle `use-of-md5`. Il propose même une correction automatique : remplacer MD5 par SHA-512.
+
+### 5. Certificats non vérifiés — `TrustAllManager.java`
+
+![Détection Semgrep du TrustManager non sécuritaire](docs/tache3/photos/Vul5.png)
+
+On a implémenté un `X509TrustManager` dont les deux méthodes de vérification (`checkClientTrusted` et `checkServerTrusted`) sont vides, et dont `getAcceptedIssuers()` renvoie `null`. Ce gestionnaire accepte donc n'importe quel certificat, même faux ou expiré (CWE-295). Une connexion HTTPS qui l'utiliserait n'aurait plus aucune protection contre une attaque de l'homme du milieu. On l'a mis dans `org.apache.tika.utils`, puisque c'est typiquement le genre d'utilitaire qu'on ajoute « pour faire marcher » une connexion vers un serveur qui a un certificat invalide.
+
+**Résultat :** Semgrep a détecté la vulnérabilité avec la règle `insecure-trust-manager`, qui s'est déclenchée trois fois, une fois sur chacune des méthodes de la classe.
+
+### 6. Injection de script — `InsecureScriptEvaluator.java`
+
+![Détection Semgrep de l'injection de script](docs/tache3/photos/Vul6.png)
+
+Cette classe est dans `org.apache.tika.config`, parce qu'on peut imaginer une configuration qui contient des expressions à évaluer. La méthode reçoit une chaîne venant de l'extérieur et la passe directement à `ScriptEngine.eval()`, qui l'exécute comme du code (CWE-94). Un attaquant qui contrôle cette chaîne pourrait donc faire exécuter son propre code par l'application.
+
+**Résultat :** Semgrep a détecté la vulnérabilité avec la règle `script-engine-injection`.
+
+### 7. Chiffrement faible — `InsecureEncryption.java`
+
+![Détection Semgrep du chiffrement DES/ECB](docs/tache3/photos/Vul7.png)
+
+Cette classe, dans `org.apache.tika.utils`, chiffre des données avec `Cipher.getInstance("DES/ECB/PKCS5Padding")` (CWE-327). Elle cumule deux problèmes. D'abord, l'algorithme DES utilise une clé de 56 bits, qu'on peut retrouver par force brute en peu de temps. Ensuite, le mode ECB chiffre deux blocs identiques de la même façon, ce qui laisse voir des motifs dans les données chiffrées.
+
+**Résultat :** Semgrep a détecté la vulnérabilité avec deux règles sur la même ligne : `des-is-deprecated` pour l'algorithme DES, et `ecb-cipher` pour le mode ECB. Il propose aussi de remplacer par `AES/GCM/NoPadding`.
 
 
 ### Le Rickroll… devenu Meowroll 🐈
