@@ -24,7 +24,13 @@ jobs:
         run: mvn -B -ntp -pl tika-annotation-processor -am install -DskipTests
 
       - name: Lancer les tests des trois classes
+        id: unit_tests
         run: mvn -B -ntp -pl tika-core test -Dtest='CharsetUtils*Test,ConcurrentUtils*Test,RegexUtils*Test'
+
+      - name: Rickroll si les tests echouent
+        if: ${{ failure() && steps.unit_tests.outcome == 'failure' }}
+        uses: ./.github/actions/rickroll
+
       - name: Lancer PIT
         run: mvn -B -ntp -pl tika-core test-compile org.pitest:pitest-maven:mutationCoverage
 
