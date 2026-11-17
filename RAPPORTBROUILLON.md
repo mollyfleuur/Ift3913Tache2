@@ -45,3 +45,14 @@ On a créé une méthode qui construit une requête SQL en ajoutant directement 
 ### 5.
 ### 6.
 ### 7.
+
+
+### Le Rickroll… devenu Meowroll 🐈
+
+Pour la partie humour, on voulait faire quelque chose d'un peu différent du rickroll classique de Rick Astley lol (parce qu'on s'est dit que le prof allait sûrement en voir 50 😭).
+
+On est donc tombées sur une version avec un chat et on a décidé de partir sur un **MEOWROLL.EXE**, avec quelques jeux de mots de dev, notamment notre préféré : *« No rollback. Only meowback. »*
+
+Côté technique, on a créé une action réutilisable qui se déclenche quand les tests échouent. Pour vérifier, on a temporairement ajouté `exit 1` dans le workflow. Résultat : l'étape des tests passe au rouge et notre action apparaît bien dans les logs. On a ensuite retiré le `exit 1` pour remettre les choses en ordre.
+
+Bref, j'espere vous aimez les chats !
